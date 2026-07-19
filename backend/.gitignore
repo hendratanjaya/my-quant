@@ -1,0 +1,82 @@
+# ── Python ──────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# ── Virtual environments ────────────────────────────────────
+.venv/
+venv/
+env/
+
+# ── uv ──────────────────────────────────────────────────────
+# uv.lock IS committed for reproducibility.
+.python-version
+
+# ── Environment / secrets ───────────────────────────────────
+# .env holds STOCKBIT_JWT, OPENROUTER_API_KEY, TELEGRAM_BOT_TOKEN.
+# Never commit. Ship .env.example instead.
+.env
+.env.*
+!.env.example
+
+# ── Databases (local archive, seeded from ingestion) ────────
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+*.db-shm
+*.db-wal
+
+# ── Vector DB (Chroma persistence) ──────────────────────────
+chroma/
+chroma_db/
+.chroma/
+
+# ── Ingestion / scraped data dumps ──────────────────────────
+data/
+scraped/
+*.csv
+*.xlsx
+*.parquet
+
+# ── Testing / coverage ──────────────────────────────────────
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
+# ── Type checkers / linters cache ───────────────────────────
+.mypy_cache/
+.ruff_cache/
+.pyright/
+.pytype/
+
+# ── Build artifacts ─────────────────────────────────────────
+build/
+dist/
+*.egg-info/
+wheels/
+
+# ── Celery / task queue local state ─────────────────────────
+celerybeat-schedule
+celerybeat.pid
+
+# ── Logs ────────────────────────────────────────────────────
+*.log
+logs/
+
+# ── Jupyter ─────────────────────────────────────────────────
+.ipynb_checkpoints/
+
+# ── IDE / editor ────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ── OS ──────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
