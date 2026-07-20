@@ -6,7 +6,9 @@ class Settings(BaseSettings):
     database_url: str = "sqlite+aiosqlite:///./myquant.db"
 
     model_config = SettingsConfigDict(
-        env_file=".env", env_file_encoding="utf-8"
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",  # let FE-only vars like SESSION_SECRET live in a shared .env without erroring here
     )
 
 

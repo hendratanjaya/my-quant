@@ -5,7 +5,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from scalar_fastapi import get_scalar_api_reference
 
 from app.model.engine import init_db
+from app.modules.fundamental.router import router as fundamental_router
 from app.modules.ohlcv.router import router as ohlcv_router
+from app.modules.seed.router import router as seed_router
 
 
 @asynccontextmanager
@@ -24,6 +26,8 @@ app.add_middleware(
 )
 
 app.include_router(ohlcv_router)
+app.include_router(fundamental_router)
+app.include_router(seed_router)
 
 
 @app.get("/scalar", include_in_schema=False)

@@ -7,6 +7,7 @@ import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
 
 import TanStackQueryDevtools from '../integrations/tanstack-query/devtools'
+import { getUserIdFn } from '#/lib/server-fns'
 
 import appCss from '../styles.css?url'
 
@@ -17,6 +18,13 @@ interface MyRouterContext {
 }
 
 export const Route = createRootRouteWithContext<MyRouterContext>()({
+  // Runs on every route (including the very first SSR render). Triggers the
+  // `user-identity` cookie to be set on first visit; no-op afterwards.
+  beforeLoad: ({ context }) =>
+    context.queryClient.ensureQueryData({
+      queryKey: ['userId'],
+      queryFn: () => getUserIdFn(),
+    }),
   head: () => ({
     meta: [
       {

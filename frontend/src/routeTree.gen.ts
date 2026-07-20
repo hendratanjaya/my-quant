@@ -9,9 +9,15 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SeedRouteImport } from './routes/seed'
 import { Route as TickerRouteImport } from './routes/$ticker'
 import { Route as IndexRouteImport } from './routes/index'
 
+const SeedRoute = SeedRouteImport.update({
+  id: '/seed',
+  path: '/seed',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TickerRoute = TickerRouteImport.update({
   id: '/$ticker',
   path: '/$ticker',
@@ -26,31 +32,42 @@ const IndexRoute = IndexRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$ticker': typeof TickerRoute
+  '/seed': typeof SeedRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/$ticker': typeof TickerRoute
+  '/seed': typeof SeedRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/$ticker': typeof TickerRoute
+  '/seed': typeof SeedRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/$ticker'
+  fullPaths: '/' | '/$ticker' | '/seed'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/$ticker'
-  id: '__root__' | '/' | '/$ticker'
+  to: '/' | '/$ticker' | '/seed'
+  id: '__root__' | '/' | '/$ticker' | '/seed'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   TickerRoute: typeof TickerRoute
+  SeedRoute: typeof SeedRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/seed': {
+      id: '/seed'
+      path: '/seed'
+      fullPath: '/seed'
+      preLoaderRoute: typeof SeedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/$ticker': {
       id: '/$ticker'
       path: '/$ticker'
@@ -71,6 +88,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   TickerRoute: TickerRoute,
+  SeedRoute: SeedRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

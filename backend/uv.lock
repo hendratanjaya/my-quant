@@ -137,8 +137,10 @@ source = { virtual = "." }
 dependencies = [
     { name = "aiosqlite" },
     { name = "alembic" },
+    { name = "beautifulsoup4" },
     { name = "fastapi" },
     { name = "greenlet" },
+    { name = "httpx" },
     { name = "openai-agents", extra = ["any-llm", "sqlalchemy"] },
     { name = "pydantic-settings" },
     { name = "scalar-fastapi" },
@@ -151,8 +153,10 @@ dependencies = [
 requires-dist = [
     { name = "aiosqlite", specifier = ">=0.22.1" },
     { name = "alembic", specifier = ">=1.18.5" },
+    { name = "beautifulsoup4", specifier = ">=4.15.0" },
     { name = "fastapi", specifier = ">=0.139.0" },
     { name = "greenlet", specifier = ">=3.5.3" },
+    { name = "httpx", specifier = ">=0.28.1" },
     { name = "openai-agents", extras = ["any-llm", "sqlalchemy"], specifier = ">=0.18.2" },
     { name = "pydantic-settings", specifier = ">=2.14.2" },
     { name = "scalar-fastapi", specifier = ">=1.8.2" },
