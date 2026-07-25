@@ -70,6 +70,38 @@ export const clearTokenFn = createServerFn({ method: 'POST' }).handler(
   },
 )
 
+// ── Chat history proxy ──────────────────────────────────────────────
+
+export interface ChatMessageRead {
+  id: number
+  role: 'user' | 'assistant'
+  content: string
+  task_id: string | null
+  trace_json: string | null
+  created_at: string
+}
+
+export const getChatHistoryFn = createServerFn({ method: 'GET' }).handler(
+  async (): Promise<ChatMessageRead[]> => {
+    const userId = await getOrCreateUserId()
+    const res = await fetch(`${API_BASE}/api/chat/history?limit=50`, {
+      headers: { 'X-User-Id': userId },
+    })
+    if (!res.ok) return []
+    return res.json() as Promise<ChatMessageRead[]>
+  },
+)
+
+export const clearChatHistoryFn = createServerFn({ method: 'DELETE' }).handler(
+  async (): Promise<void> => {
+    const userId = await getOrCreateUserId()
+    await fetch(`${API_BASE}/api/chat/history`, {
+      method: 'DELETE',
+      headers: { 'X-User-Id': userId },
+    })
+  },
+)
+
 // ── Seed proxy ──────────────────────────────────────────────────────
 
 export const seedTickerFn = createServerFn({ method: 'POST' })

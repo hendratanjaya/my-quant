@@ -10,52 +10,57 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SeedRouteImport } from './routes/seed'
-import { Route as TickerRouteImport } from './routes/$ticker'
-import { Route as IndexRouteImport } from './routes/index'
+import { Route as MainRouteImport } from './routes/_main'
+import { Route as MainIndexRouteImport } from './routes/_main/index'
+import { Route as MainTickerRouteImport } from './routes/_main/$ticker'
 
 const SeedRoute = SeedRouteImport.update({
   id: '/seed',
   path: '/seed',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TickerRoute = TickerRouteImport.update({
-  id: '/$ticker',
-  path: '/$ticker',
+const MainRoute = MainRouteImport.update({
+  id: '/_main',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
+const MainIndexRoute = MainIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => MainRoute,
+} as any)
+const MainTickerRoute = MainTickerRouteImport.update({
+  id: '/$ticker',
+  path: '/$ticker',
+  getParentRoute: () => MainRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/$ticker': typeof TickerRoute
+  '/': typeof MainIndexRoute
   '/seed': typeof SeedRoute
+  '/$ticker': typeof MainTickerRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/$ticker': typeof TickerRoute
   '/seed': typeof SeedRoute
+  '/$ticker': typeof MainTickerRoute
+  '/': typeof MainIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/$ticker': typeof TickerRoute
+  '/_main': typeof MainRouteWithChildren
   '/seed': typeof SeedRoute
+  '/_main/$ticker': typeof MainTickerRoute
+  '/_main/': typeof MainIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/$ticker' | '/seed'
+  fullPaths: '/' | '/seed' | '/$ticker'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/$ticker' | '/seed'
-  id: '__root__' | '/' | '/$ticker' | '/seed'
+  to: '/seed' | '/$ticker' | '/'
+  id: '__root__' | '/_main' | '/seed' | '/_main/$ticker' | '/_main/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  TickerRoute: typeof TickerRoute
+  MainRoute: typeof MainRouteWithChildren
   SeedRoute: typeof SeedRoute
 }
 
@@ -68,26 +73,44 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SeedRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/$ticker': {
-      id: '/$ticker'
-      path: '/$ticker'
-      fullPath: '/$ticker'
-      preLoaderRoute: typeof TickerRouteImport
+    '/_main': {
+      id: '/_main'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof MainRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
+    '/_main/': {
+      id: '/_main/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof MainIndexRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/$ticker': {
+      id: '/_main/$ticker'
+      path: '/$ticker'
+      fullPath: '/$ticker'
+      preLoaderRoute: typeof MainTickerRouteImport
+      parentRoute: typeof MainRoute
     }
   }
 }
 
+interface MainRouteChildren {
+  MainTickerRoute: typeof MainTickerRoute
+  MainIndexRoute: typeof MainIndexRoute
+}
+
+const MainRouteChildren: MainRouteChildren = {
+  MainTickerRoute: MainTickerRoute,
+  MainIndexRoute: MainIndexRoute,
+}
+
+const MainRouteWithChildren = MainRoute._addFileChildren(MainRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
-  TickerRoute: TickerRoute,
+  MainRoute: MainRouteWithChildren,
   SeedRoute: SeedRoute,
 }
 export const routeTree = rootRouteImport

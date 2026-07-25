@@ -5,7 +5,7 @@ import {
   createChart,
   type UTCTimestamp,
 } from 'lightweight-charts'
-import { ChevronLeft, ChevronRight, Pencil, Plus, Trash2 } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Pencil, Plus, RefreshCw, Trash2 } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { Button } from '#/components/ui/button'
@@ -33,7 +33,7 @@ import { IDX_TICKERS } from '#/constants/idx-tickers'
 const PAGE_SIZE = 5
 
 export function PortfolioStrip() {
-  const { positions, add, remove, update } = usePortfolio()
+  const { positions, isFetching, refetch, add, remove, update } = usePortfolio()
   const [page, setPage] = useState(0)
   const totalPages = Math.ceil(positions.length / PAGE_SIZE)
   const visible = positions.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
@@ -79,6 +79,14 @@ export function PortfolioStrip() {
           aria-label="Next page"
         >
           <ChevronRight className="h-4 w-4" />
+        </button>
+        <button
+          className="flex items-center pl-1 text-muted-foreground transition-colors hover:text-foreground disabled:opacity-30"
+          onClick={() => refetch()}
+          disabled={isFetching}
+          aria-label="Reload portfolio"
+        >
+          <RefreshCw className={cn('h-4 w-4', isFetching && 'animate-spin')} />
         </button>
         <AddPositionDialog onAdd={add}>
           <button

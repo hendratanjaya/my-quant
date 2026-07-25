@@ -41,6 +41,7 @@ scraped/
 *.parquet
 
 # ── Testing / coverage ──────────────────────────────────────
+tests/
 .pytest_cache/
 .coverage
 .coverage.*

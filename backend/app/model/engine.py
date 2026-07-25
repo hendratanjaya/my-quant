@@ -1,8 +1,8 @@
 from collections.abc import AsyncGenerator
 
 from sqlalchemy.ext.asyncio import create_async_engine
-from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel import SQLModel
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.core.settings import settings
 from app.model import database as _models  # noqa: F401 — registers all table metadata

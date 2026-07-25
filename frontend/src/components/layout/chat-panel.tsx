@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Send } from 'lucide-react'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+import { Link } from '@tanstack/react-router'
 
 import { Button } from '#/components/ui/button'
 import { Textarea } from '#/components/ui/textarea'
@@ -18,29 +21,23 @@ import {
   type AssistantMessage,
   type ChatMessage,
 } from '#/lib/chat-store'
+import { getUserIdFn } from '#/lib/server-fns'
 import { cn } from '#/lib/utils'
 
-// Stable empty-array reference so `useChatStore((s) => s.sessions[key] ?? EMPTY)`
-// doesn't return a new `[]` on every render — that would trigger an infinite
-// re-render loop under Zustand's default Object.is equality check.
-const EMPTY_MESSAGES: ChatMessage[] = []
-
-interface ChatPanelProps {
-  /** Session key — per-ticker (`bbri`) or `home` for the general chat on `/`. */
-  sessionKey: string
-  /** Human-readable label shown in the panel header. */
-  contextLabel: string
-}
-
-export function ChatPanel({ sessionKey, contextLabel }: ChatPanelProps) {
+export function ChatPanel() {
   const [input, setInput] = useState('')
   const [slashIndex, setSlashIndex] = useState(0)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
 
-  const messages = useChatStore((s) => s.sessions[sessionKey] ?? EMPTY_MESSAGES)
+  const messages = useChatStore((s) => s.messages)
   const append = useChatStore((s) => s.append)
   const replace = useChatStore((s) => s.replace)
+  const hydrate = useChatStore((s) => s.hydrate)
+
+  useEffect(() => {
+    getUserIdFn().then(({ user_id }) => hydrate(user_id))
+  }, [])
 
   const slashOpen = isSlashInput(input)
   const filtered = useMemo(
@@ -70,13 +67,12 @@ export function ChatPanel({ sessionKey, contextLabel }: ChatPanelProps) {
       content: raw,
       ts: Date.now(),
     }
-    append(sessionKey, userMsg)
+    append(userMsg)
 
     if (isSlashInput(raw)) {
       await dispatchSlash(raw)
     } else {
-      // No agent backend yet — placeholder response.
-      append(sessionKey, {
+      append({
         id: newMessageId(),
         role: 'assistant',
         kind: 'text',
@@ -91,7 +87,7 @@ export function ChatPanel({ sessionKey, contextLabel }: ChatPanelProps) {
     const { command, args } = parseSlashInput(raw)
     const cmd = findCommand(command)
     if (!cmd) {
-      append(sessionKey, {
+      append({
         id: newMessageId(),
         role: 'assistant',
         kind: 'error',
@@ -102,14 +98,19 @@ export function ChatPanel({ sessionKey, contextLabel }: ChatPanelProps) {
     }
 
     const loadingId = newMessageId()
-    append(sessionKey, {
+    append({
       id: loadingId,
       role: 'assistant',
       kind: 'loading',
       ts: Date.now(),
     })
 
-    const result = await cmd.run(args)
+    const result = await cmd.run(args, (progressContent) => {
+      replace(loadingId, {
+        id: loadingId, role: 'assistant', kind: 'text',
+        content: progressContent, ts: Date.now(),
+      })
+    })
     const final: AssistantMessage =
       result.kind === 'fundamental'
         ? {
@@ -134,7 +135,7 @@ export function ChatPanel({ sessionKey, contextLabel }: ChatPanelProps) {
               content: result.content,
               ts: Date.now(),
             }
-    replace(sessionKey, loadingId, final)
+    replace(loadingId, final)
   }
 
   function pickCommand(cmd: SlashCommand) {
@@ -174,21 +175,13 @@ export function ChatPanel({ sessionKey, contextLabel }: ChatPanelProps) {
 
   return (
     <div className="flex h-full flex-col">
-      <header className="border-b px-4 py-3">
-        <h2 className="text-sm font-medium text-muted-foreground">
-          Agent session
-        </h2>
-        <p className="text-lg font-semibold">{contextLabel}</p>
-      </header>
-
       <div
         ref={scrollRef}
         className="flex-1 overflow-y-auto px-4 py-3"
       >
         {messages.length === 0 ? (
           <div className="text-sm text-muted-foreground">
-            Session <code className="rounded bg-muted px-1">{sessionKey}</code>{' '}
-            — no messages yet. Try <code>/fd BBRI</code> or type{' '}
+            No messages yet. Try <code>/fd BBRI</code> or type{' '}
             <code>/</code> to see options.
           </div>
         ) : (
@@ -272,7 +265,34 @@ function MessageBubble({ message }: { message: ChatMessage }) {
           : 'bg-white/5 text-foreground',
       )}
     >
-      <p className="whitespace-pre-wrap">{message.content}</p>
+      {message.kind === 'error' ? (
+        <p className="whitespace-pre-wrap">{message.content}</p>
+      ) : (
+        <div className="prose prose-sm dark:prose-invert max-w-none
+          [&>*:first-child]:mt-0 [&>*:last-child]:mb-0
+          prose-p:my-1 prose-headings:my-2 prose-headings:font-semibold
+          prose-h1:text-base prose-h2:text-sm prose-h3:text-sm
+          prose-ul:my-1 prose-ol:my-1 prose-li:my-0
+          prose-strong:font-semibold prose-hr:my-2">
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            components={{
+              a: ({ href, children }) =>
+                href?.startsWith('/') ? (
+                  <Link to={href} className="font-semibold underline underline-offset-2 hover:opacity-80">
+                    {children}
+                  </Link>
+                ) : (
+                  <a href={href} target="_blank" rel="noreferrer" className="underline underline-offset-2 hover:opacity-80">
+                    {children}
+                  </a>
+                ),
+            }}
+          >
+            {message.content}
+          </ReactMarkdown>
+        </div>
+      )}
     </div>
   )
 }

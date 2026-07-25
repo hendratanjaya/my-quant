@@ -1,5 +1,6 @@
 import {
   HeadContent,
+  Outlet,
   Scripts,
   createRootRouteWithContext,
 } from '@tanstack/react-router'
@@ -18,8 +19,6 @@ interface MyRouterContext {
 }
 
 export const Route = createRootRouteWithContext<MyRouterContext>()({
-  // Runs on every route (including the very first SSR render). Triggers the
-  // `user-identity` cookie to be set on first visit; no-op afterwards.
   beforeLoad: ({ context }) =>
     context.queryClient.ensureQueryData({
       queryKey: ['userId'],
@@ -27,24 +26,13 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
     }),
   head: () => ({
     meta: [
-      {
-        charSet: 'utf-8',
-      },
-      {
-        name: 'viewport',
-        content: 'width=device-width, initial-scale=1',
-      },
-      {
-        title: 'my-quant',
-      },
+      { charSet: 'utf-8' },
+      { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+      { title: 'my-quant' },
     ],
-    links: [
-      {
-        rel: 'stylesheet',
-        href: appCss,
-      },
-    ],
+    links: [{ rel: 'stylesheet', href: appCss }],
   }),
+  component: () => <Outlet />,
   shellComponent: RootDocument,
 })
 
@@ -57,14 +45,9 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <body className="h-screen overflow-hidden bg-background text-foreground">
         {children}
         <TanStackDevtools
-          config={{
-            position: 'bottom-right',
-          }}
+          config={{ position: 'bottom-right' }}
           plugins={[
-            {
-              name: 'Tanstack Router',
-              render: <TanStackRouterDevtoolsPanel />,
-            },
+            { name: 'Tanstack Router', render: <TanStackRouterDevtoolsPanel /> },
             TanStackQueryDevtools,
           ]}
         />

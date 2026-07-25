@@ -29,6 +29,7 @@ const GRID = 'rgba(255, 255, 255, 0.05)'
 const MA_CONFIG: Array<{ period: number; color: string }> = [
   { period: 3, color: '#f472b6' },
   { period: 5, color: '#c084fc' },
+  { period: 10, color: '#7dd3fc' },
   { period: 20, color: '#fb923c' },
   { period: 50, color: '#4ade80' },
   { period: 100, color: '#60a5fa' },
