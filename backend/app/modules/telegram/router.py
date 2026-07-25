@@ -3,6 +3,7 @@ from fastapi import APIRouter, Request
 from pydantic import BaseModel
 
 from app.core.settings import settings
+from app.model.engine import get_session
 from app.lib.fd_image import render_fd_image
 from app.lib.telegram import send_message, send_photo
 from app.modules.fundamental.service import get_fundamental_report
@@ -69,7 +70,9 @@ async def _handle_fd(chat_id: int, args: list[str]) -> None:
             chat_id, "Usage: <code>/fd TICKER</code> — e.g. <code>/fd BBRI</code>"
         )
         return
-    report = get_fundamental_report(args[0].upper())
+    async for session in get_session():
+        report = await get_fundamental_report(args[0].upper(), session)
+        break
     if not report.metrics:
         send_message(chat_id, f"<b>{report.symbol}</b>\n{report.reading}")
     else:
