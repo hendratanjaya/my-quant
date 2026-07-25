@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from scalar_fastapi import get_scalar_api_reference
 
 from app.core.chroma_client import get_chroma
+from app.core.settings import settings
 from app.model.engine import init_db
 from app.modules.chat.router import router as chat_router
 from app.modules.fundamental.router import router as fundamental_router
@@ -26,7 +27,7 @@ app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=settings.allowed_origins,
     allow_methods=["*"],
     allow_headers=["*"],
 )

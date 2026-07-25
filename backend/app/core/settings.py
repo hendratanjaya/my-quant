@@ -10,6 +10,7 @@ class Settings(BaseSettings):
 
     redis_url: str
     chroma_path: str
+    allowed_origins: list[str]
 
     model_config = SettingsConfigDict(
         env_file=".env",
