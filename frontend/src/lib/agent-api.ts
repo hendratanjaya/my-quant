@@ -1,6 +1,6 @@
 import { getUserIdFn } from './server-fns'
 
-const BASE = import.meta.env.VITE_API_BASE_URL as string
+const BASE = import.meta.env.VITE_BACKEND_URL as string
 
 async function headers(): Promise<HeadersInit> {
   const { user_id } = await getUserIdFn()

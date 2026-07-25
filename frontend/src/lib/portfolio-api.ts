@@ -14,7 +14,7 @@ interface ServerPosition {
   updated_at: string
 }
 
-const BASE = import.meta.env.VITE_API_BASE_URL as string
+const BASE = import.meta.env.VITE_BACKEND_URL as string
 
 async function withUserId(): Promise<HeadersInit> {
   const { user_id } = await getUserIdFn()
