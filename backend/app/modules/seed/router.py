@@ -4,10 +4,12 @@ from pathlib import Path
 from fastapi import APIRouter, Depends, Header, HTTPException
 from sqlmodel import select
 
+from app.lib.idx_tickers import IDX_TICKERS
 from app.model.database import FundamentalDataRow
 from app.model.engine import get_session
 from app.modules.seed import service
 from app.modules.seed.schema import SeededSummary, SeededTicker
+from app.modules.seed.task import bulk_seed_fundamentals
 from app.scrapers.stockbit.fetcher import StockbitAuthError, StockbitFetchError
 
 router = APIRouter(prefix="/api/seed", tags=["seed"])
@@ -43,6 +45,19 @@ async def import_from_file(session=Depends(get_session)) -> list[SeededSummary]:
 
     await session.commit()
     return await service.list_summaries(session)
+
+
+@router.post("/bulk", status_code=202)
+def bulk_seed(
+    authorization: str | None = Header(default=None),
+    limit: int | None = None,
+) -> dict:
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Missing bearer token")
+    jwt = authorization.removeprefix("Bearer ").strip()
+    total = min(limit, len(IDX_TICKERS)) if limit else len(IDX_TICKERS)
+    bulk_seed_fundamentals.delay(jwt, limit=limit)
+    return {"status": "queued", "total": total}
 
 
 @router.get("", response_model=list[SeededSummary])

@@ -16,6 +16,7 @@ celery_app = Celery(
     include=[
         "app.agent.runner",
         "app.modules.screen.task",
+        "app.modules.seed.task",
         "app.modules.telegram.task",
     ],
 )
