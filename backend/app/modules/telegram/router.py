@@ -3,9 +3,9 @@ from fastapi import APIRouter, Request
 from pydantic import BaseModel
 
 from app.core.settings import settings
-from app.model.engine import get_session
 from app.lib.fd_image import render_fd_image
 from app.lib.telegram import send_message, send_photo
+from app.model.engine import get_session
 from app.modules.fundamental.service import get_fundamental_report
 from app.modules.telegram.handlers import handle_screen_args
 from app.modules.telegram.task import run_screen_telegram
@@ -46,7 +46,8 @@ async def webhook(request: Request):
             send_message(chat_id, error)
         else:
             send_message(
-                chat_id, f"Scanning for <b>{', '.join(s.upper() for s in signals)}</b>…"
+                chat_id,
+                f"Scanning for <b>{', '.join(s.upper() for s in signals)}</b>…",
             )
             run_screen_telegram.delay(chat_id, signals)
 
@@ -67,7 +68,8 @@ async def webhook(request: Request):
 async def _handle_fd(chat_id: int, args: list[str]) -> None:
     if not args:
         send_message(
-            chat_id, "Usage: <code>/fd TICKER</code> — e.g. <code>/fd BBRI</code>"
+            chat_id,
+            "Usage: <code>/fd TICKER</code> — e.g. <code>/fd BBRI</code>",
         )
         return
     async for session in get_session():
@@ -86,8 +88,8 @@ class SetupRequest(BaseModel):
     url: str
 
 
-@router.post("/setup-webhook")
-def setup_webhook(body: SetupRequest):
-    api_url = f"https://api.telegram.org/bot{settings.telegram_bot_token}/setWebhook"
-    res = httpx.post(api_url, json={"url": body.url})
-    return res.json()
+# @router.post("/setup-webhook")
+# def setup_webhook(body: SetupRequest):
+#     api_url = f"https://api.telegram.org/bot{settings.telegram_bot_token}/setWebhook"
+#     res = httpx.post(api_url, json={"url": body.url})
+#     return res.json()

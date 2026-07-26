@@ -38,7 +38,7 @@ app.include_router(seed_router)
 app.include_router(portfolio_router)
 app.include_router(chat_router)
 app.include_router(screen_router)
-# app.include_router(telegram_router)
+app.include_router(telegram_router)
 
 
 # @app.get("/scalar", include_in_schema=False)
