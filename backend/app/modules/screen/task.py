@@ -47,6 +47,6 @@ async def _screen_async(task_id: str, signals: list[str]) -> None:
     emitter.emit("done", {"count": hit_count})
 
 
-@celery_app.task(name="run_screen")
+@celery_app.task(name="run_screen", time_limit=600, soft_time_limit=570)
 def run_screen(task_id: str, signals: list[str]) -> None:
     asyncio.run(_screen_async(task_id, signals))

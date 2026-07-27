@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import asyncio
 import json
 import uuid
 
@@ -8,7 +7,7 @@ from fastapi import APIRouter, Depends, Header, HTTPException, Query
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
-from app.core.redis_client import get_redis
+from app.core.redis_client import get_async_redis
 from app.modules.screen.task import _VALID_SIGNALS, run_screen
 
 router = APIRouter(tags=["screen"])
@@ -55,14 +54,12 @@ async def stream_screen(
     channel = f"screen:{task_id}"
 
     async def gen():
-        r = get_redis()
+        r = get_async_redis()
         pubsub = r.pubsub()
-        pubsub.subscribe(channel)
+        await pubsub.subscribe(channel)
         try:
-            while True:
-                msg = pubsub.get_message(ignore_subscribe_messages=True, timeout=1.0)
-                if msg is None:
-                    await asyncio.sleep(0.05)
+            async for msg in pubsub.listen():
+                if msg["type"] != "message":
                     continue
                 raw = msg["data"]
                 if isinstance(raw, bytes):
@@ -75,7 +72,7 @@ async def stream_screen(
                 except json.JSONDecodeError:
                     pass
         finally:
-            pubsub.unsubscribe(channel)
-            pubsub.close()
+            await pubsub.unsubscribe(channel)
+            await pubsub.aclose()
 
     return StreamingResponse(gen(), media_type="text/event-stream")
