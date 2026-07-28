@@ -15,9 +15,21 @@ export async function fetchOhlcv(
   return res.json() as Promise<Candle[]>
 }
 
+export interface PaginatedSeededSummary {
+  items: SeededSummary[]
+  total: number
+  page: number
+  page_size: number
+}
+
 /** No auth required — reads the local archive metadata. */
-export async function listSeeded(): Promise<SeededSummary[]> {
-  const res = await fetch(`${API_BASE}/api/seed`)
+export async function listSeeded(
+  page = 1,
+  pageSize = 20,
+): Promise<PaginatedSeededSummary> {
+  const res = await fetch(
+    `${API_BASE}/api/seed?page=${page}&page_size=${pageSize}`,
+  )
   if (!res.ok) throw new Error(`${res.status}`)
   return res.json()
 }

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Database, KeyRound, Plus } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Database, KeyRound, Plus } from 'lucide-react'
 
 import { listSeeded, type SeededSummary } from '#/lib/api'
 import {
@@ -18,7 +18,8 @@ import {
   DialogTitle,
 } from '#/components/ui/dialog'
 import { Input } from '#/components/ui/input'
-import { Textarea } from '#/components/ui/textarea'
+
+const PAGE_SIZE = 20
 
 export const Route = createFileRoute('/seed')({
   loader: ({ context }) =>
@@ -34,6 +35,7 @@ function SeedPage() {
   const queryClient = useQueryClient()
   const [addOpen, setAddOpen] = useState(false)
   const [addError, setAddError] = useState<string | null>(null)
+  const [page, setPage] = useState(1)
 
   const authQuery = useQuery({
     queryKey: ['auth'],
@@ -41,10 +43,14 @@ function SeedPage() {
   })
   const hasToken = authQuery.data?.hasToken ?? false
 
-  const { data: seeded = [], isPending } = useQuery({
-    queryKey: ['seeded'],
-    queryFn: listSeeded,
+  const { data: seededPage, isPending } = useQuery({
+    queryKey: ['seeded', page],
+    queryFn: () => listSeeded(page, PAGE_SIZE),
   })
+
+  const seeded = seededPage?.items ?? []
+  const total = seededPage?.total ?? 0
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
 
   const saveTokenMutation = useMutation({
     mutationFn: (token: string) => saveTokenFn({ data: token }),
@@ -59,6 +65,7 @@ function SeedPage() {
       if (result.ok) {
         setAddOpen(false)
         setAddError(null)
+        setPage(1)
         queryClient.invalidateQueries({ queryKey: ['seeded'] })
         return
       }
@@ -91,7 +98,7 @@ function SeedPage() {
           <p className="mt-1 text-sm text-muted-foreground">
             {isPending
               ? 'Loading…'
-              : `${seeded.length} ticker${seeded.length === 1 ? '' : 's'} archived from Stockbit`}
+              : `${total} ticker${total === 1 ? '' : 's'} archived from Stockbit`}
           </p>
         </div>
         <Button
@@ -111,11 +118,37 @@ function SeedPage() {
           No tickers seeded yet. Add one to start building the archive.
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {seeded.map((s) => (
-            <SeededCard key={s.symbol} summary={s} />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {seeded.map((s) => (
+              <SeededCard key={s.symbol} summary={s} />
+            ))}
+          </div>
+
+          {totalPages > 1 && (
+            <div className="mt-6 flex items-center justify-center gap-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page === 1 || isPending}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <span className="text-sm text-muted-foreground">
+                Page {page} of {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages || isPending}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+        </>
       )}
 
       <JwtDialog

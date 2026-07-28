@@ -25,3 +25,10 @@ class SeededSummary(BaseModel):
     row_count: int
     period_first: date | None
     period_last: date | None
+
+
+class PaginatedSeededSummary(BaseModel):
+    items: list[SeededSummary]
+    total: int
+    page: int
+    page_size: int

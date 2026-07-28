@@ -4,12 +4,12 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
-from sqlalchemy import delete
+from sqlalchemy import delete, func
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.model.database import FundamentalDataRow
-from app.modules.seed.schema import SeededSummary
+from app.modules.seed.schema import PaginatedSeededSummary, SeededSummary
 from app.scrapers.stockbit import fetcher
 from app.scrapers.stockbit.parser import parse_html_report
 
@@ -35,6 +35,41 @@ async def list_summaries(session: AsyncSession) -> list[SeededSummary]:
         )
         for symbol, rs in sorted(by_symbol.items())
     ]
+
+
+async def list_summaries_paginated(
+    session: AsyncSession, page: int = 1, page_size: int = 20
+) -> PaginatedSeededSummary:
+    total_result = await session.execute(
+        select(func.count(FundamentalDataRow.symbol.distinct()))
+    )
+    total = total_result.scalar_one()
+
+    stmt = (
+        select(
+            FundamentalDataRow.symbol,
+            func.count(FundamentalDataRow.id).label("row_count"),
+            func.min(FundamentalDataRow.period_end).label("period_first"),
+            func.max(FundamentalDataRow.period_end).label("period_last"),
+        )
+        .group_by(FundamentalDataRow.symbol)
+        .order_by(FundamentalDataRow.symbol)
+        .offset((page - 1) * page_size)
+        .limit(page_size)
+    )
+    result = await session.execute(stmt)
+    items = [
+        SeededSummary(
+            symbol=row.symbol,
+            seeded_at=datetime.now(UTC),
+            row_count=row.row_count,
+            period_first=row.period_first,
+            period_last=row.period_last,
+        )
+        for row in result.all()
+    ]
+
+    return PaginatedSeededSummary(items=items, total=total, page=page, page_size=page_size)
 
 
 async def upsert_ticker(symbol: str, jwt: str, session: AsyncSession) -> SeededSummary:

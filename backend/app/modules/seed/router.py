@@ -8,7 +8,7 @@ from app.lib.idx_tickers import IDX_TICKERS
 from app.model.database import FundamentalDataRow
 from app.model.engine import get_session
 from app.modules.seed import service
-from app.modules.seed.schema import SeededSummary, SeededTicker
+from app.modules.seed.schema import PaginatedSeededSummary, SeededSummary, SeededTicker
 from app.modules.seed.task import bulk_seed_fundamentals
 from app.scrapers.stockbit.fetcher import StockbitAuthError, StockbitFetchError
 
@@ -60,9 +60,13 @@ def bulk_seed(
     return {"status": "queued", "total": total}
 
 
-@router.get("", response_model=list[SeededSummary])
-async def list_seeded(session=Depends(get_session)) -> list[SeededSummary]:
-    return await service.list_summaries(session)
+@router.get("", response_model=PaginatedSeededSummary)
+async def list_seeded(
+    page: int = 1,
+    page_size: int = 20,
+    session=Depends(get_session),
+) -> PaginatedSeededSummary:
+    return await service.list_summaries_paginated(session, page=page, page_size=page_size)
 
 
 @router.post("/{symbol}", response_model=SeededSummary, status_code=201)
@@ -76,9 +80,7 @@ async def seed_ticker(
     jwt = authorization.removeprefix("Bearer ").strip()
 
     try:
-        return await service.seed_ticker(symbol, jwt, session)
-    except service.AlreadySeededError as exc:
-        raise HTTPException(status_code=409, detail=str(exc)) from exc
+        return await service.upsert_ticker(symbol, jwt, session)
     except StockbitAuthError as exc:
         raise HTTPException(
             status_code=401, detail="Stockbit JWT invalid or expired"
