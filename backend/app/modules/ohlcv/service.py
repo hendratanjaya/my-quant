@@ -19,7 +19,7 @@ def _fetch_sync(yf_symbol: str, start: str, interval: str) -> list[Candle]:
         yf_symbol,
         start=start,
         interval=interval,
-        auto_adjust=True,
+        auto_adjust=False,
         progress=False,
         multi_level_index=False,
     )
